@@ -1,0 +1,116 @@
+﻿@{
+    ViewBag.Title = "Image Upload";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    <style>
+        
+        #dropArea {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Image Upload</h2>
+
+    <div id="dropArea">
+        <p>Click to select files.</p>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="files" multiple style="display: none;" />
+
+        </form>
+
+        <div id="fileListLabel">Uploaded Files:</div>
+        <ul id="fileList"></ul>
+    </div>
+
+    <button onclick="uploadImages(event)">Upload</button>
+
+    @* Display the alt text download link only if alt text is available *@
+    <div>
+        <p>Alt Text Download:</p>
+        <a id="downloadLink" style="display:none;" asp-action="DownloadAltTextFile" asp-controller="Home">Download Alt Text</a>
+    </div>
+
+    <script>
+        var dropArea = document.getElementById('dropArea');
+        var fileInput = document.getElementById('fileInput');
+        var uploadForm = document.getElementById('uploadForm');
+        var fileListLabel = document.getElementById('fileListLabel');
+        var fileList = document.getElementById('fileList');
+        var downloadLink = document.getElementById('downloadLink');
+        var formData = new FormData();  // Create a new FormData object
+
+        dropArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropArea.style.border = '2px dashed #000';
+        });
+
+        dropArea.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            dropArea.style.border = '2px dashed #ccc';
+        });
+
+        dropArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+
+            dropArea.style.border = '2px dashed #ccc';
+
+            for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                fileInput.files = e.dataTransfer.files;
+                displayFileNames();
+            }
+        });
+
+        dropArea.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            // Display file names
+            displayFileNames();
+        });
+
+        function displayFileNames() {
+            for (var i = 0; i < fileInput.files.length; i++) {
+                var fileName = fileInput.files[i].name;
+                var listItem = document.createElement('li');
+
+                listItem.textContent = fileName;
+                fileList.appendChild(listItem);
+            }
+        }
+
+        function uploadImages() {
+            var formData = new FormData();  // Create a new FormData object
+
+
+            // Append each file to the FormData object
+            Array.from(fileInput.files).forEach(file => {
+                formData.append('files', file);
+            });
+
+            fetch('/Home/UploadImages', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+
+                    // Show download link after uploading images
+                    downloadLink.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
